@@ -15,7 +15,10 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-7.12
+#resolver: lts-7.12
+
+# 321 meins
+resolver: lts-8.5
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -41,6 +44,8 @@ packages:
 # (e.g., acme-missiles-0.3)
 extra-deps:
 - hasbolt-0.1.0.2
+- haddock-api-2.17.3.1
+- hdocs-0.5.2.0
 
 # Override default flag values for local packages and extra-deps
 flags: {}
