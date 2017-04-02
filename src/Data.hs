@@ -4,21 +4,34 @@ module Data
     ( ServerState (..), WebM (..)
     , constructState
     , querySearch, queryMovie, queryGraph
-    , queryDemoDate, queryDemoFile, queryDemoPing
+    , queryDemoDate, queryDemoFile, queryDemoPing, createDemoZip
     ) where
 
-import           Control.Monad.Trans        (liftIO)
-import           Control.Monad.Trans.Reader (ReaderT (..))
-import           Data.List                  (nub)
-import           Data.Maybe                 (fromJust)
-import           Data.Map.Strict            (fromList, (!))
-import           Data.Monoid                ((<>))
-import           Data.Pool                  (Pool, createPool)
-import           Data.Text                  (Text, pack)
-import           Database.Bolt
-import           System.Process             (CreateProcess, shell, readCreateProcess, readCreateProcessWithExitCode)
+import Control.Monad.Trans.Reader           (ReaderT (..))
+import Data.List                            (nub)
+import Data.Maybe                           (fromJust)
+import Data.Map.Strict                      (fromList, (!))
+import Data.Monoid                          ((<>))
+import Data.Pool                            (Pool, createPool)
+import Data.Text as DT                      (Text, pack)
+import Database.Bolt
+import Type
 
-import           Type
+import System.Process                       (CreateProcess, shell, readCreateProcess, readCreateProcessWithExitCode)
+import Codec.Archive.Zip                    (CompressionMethod (Store), mkEntrySelector, createArchive, addEntry, withArchive)
+{--                                          (ZipOption (..),
+                                             Archive (Archive),
+                                             Entry,
+                                             toEntry,
+                                             addFilesToArchive,
+                                             addEntryToArchive,
+                                             writeEntry)
+--}
+import Path                                 (Path, parseRelFile)
+import Path.IO                              (resolveFile')
+import Data.Time.Clock.POSIX                (getPOSIXTime)
+import Data.ByteString.Lazy.Char8 as BL     (pack)
+import Data.ByteString.Char8 as B           (pack)
 
 -- |A pool of connections to Neo4j server
 newtype ServerState = ServerState { pool :: Pool Pipe }
@@ -75,13 +88,41 @@ constructState bcfg = do pool <- createPool (connect bcfg) close 4 500 1
 -- | *** Demo stuff ***
 
 queryDemoDate :: IO Text
-queryDemoDate = do r <- readCreateProcess (shell "date") ""
-                   return $ pack r
+queryDemoDate = do
+  r <- readCreateProcess (shell "date") ""
+  return $ DT.pack r
 
 queryDemoPing :: IO (Text, Text, Text)
-queryDemoPing = do (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell "ping -c 5 localhost") ""
-                   return $ (pack $ show exitcode, pack stdout, pack stderr)
+queryDemoPing = do
+  (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell "ping -c 5 localhost") ""
+  return (DT.pack $ show exitcode, DT.pack stdout, DT.pack stderr)
 
 queryDemoFile :: IO Text
-queryDemoFile = do r <- readFile "./demo.log"
-                   return $ pack r
+queryDemoFile = do
+  r <- readFile "./demo.log"
+  return $ DT.pack r
+
+createDemoZip :: IO ()
+{--
+createDemoZip = do t <- round `fmap` getPOSIXTime
+                   writeFile "./result.zip" ""
+                   let ar = Archive [] Nothing (BS.pack "a comment")
+                   ar <- addFilesToArchive [OptVerbose, OptLocation "result.zip" True] ar ["./demo.log"]
+                   let entry = toEntry "asdf.txt" t (BS.pack "asdf")
+                   return $ addEntryToArchive entry ar
+                   writeEntry [OptVerbose, OptLocation "result.zip" True] entry
+                   return ()
+--}
+createDemoZip = do
+  resultZipPath <- resolveFile' "./result.zip"
+  -- entry from string
+  entryAsdf <- parseRelFile "./zipped-asdf.txt" >>= mkEntrySelector
+  let zipAsdf = addEntry Store "asdf" entryAsdf
+  -- initial result.zip
+  createArchive resultZipPath zipAsdf
+ -- entry from existing file
+  logStr <- readFile "./demo.log"
+  entryLog <- parseRelFile "./zipped-demo.log" >>= mkEntrySelector
+  let zipLog = addEntry Store (B.pack logStr) entryLog
+  -- add to result.zip
+  withArchive resultZipPath zipLog

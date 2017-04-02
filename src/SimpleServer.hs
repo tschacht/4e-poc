@@ -26,4 +26,5 @@ runServer port config = do state <- constructState config
                              get "/graph"        graphR
                              get "/search"       searchR
                              get "/movie/:title" movieR
-                             get "/demo"         demoR
+                             get "/demo"         demoInfoR
+                             get "/demo-zip"     demoZipR

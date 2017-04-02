@@ -41,9 +41,12 @@ movieR = do t <- param "title" :: ActionT Text WebM Text
 
 -- | *** Demo stuff ***
 
--- |Date response route
-demoR :: ActionT Text WebM ()
-demoR = do rDate <- liftIO queryDemoDate
-           rFile <- liftIO queryDemoFile
-           (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
-           json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+demoInfoR :: ActionT Text WebM ()
+demoInfoR = do rDate <- liftIO queryDemoDate
+               rFile <- liftIO queryDemoFile
+               (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
+               json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+
+demoZipR :: ActionT Text WebM ()
+demoZipR = do liftIO createDemoZip
+              file "./result.zip"
