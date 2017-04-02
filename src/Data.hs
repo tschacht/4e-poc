@@ -4,7 +4,7 @@ module Data
     ( ServerState (..), WebM (..)
     , constructState
     , querySearch, queryMovie, queryGraph
-    , queryDemoDate, queryDemoFile, queryDemoPing, createDemoZip
+    , queryDemoDate, queryDemoFile, queryDemoPing, createDemoZip, runDemoWebdriver
     ) where
 
 import Control.Monad.Trans.Reader           (ReaderT (..))
@@ -32,6 +32,8 @@ import Path.IO                              (resolveFile')
 import Data.Time.Clock.POSIX                (getPOSIXTime)
 import Data.ByteString.Lazy.Char8 as BL     (pack)
 import Data.ByteString.Char8 as B           (pack)
+import Test.WebDriver                       (runSession, runWD, defaultConfig, defaultCaps, openPage, closeSession, saveScreenshot)
+
 
 -- |A pool of connections to Neo4j server
 newtype ServerState = ServerState { pool :: Pool Pipe }
@@ -126,3 +128,8 @@ createDemoZip = do
   let zipLog = addEntry Store (B.pack logStr) entryLog
   -- add to result.zip
   withArchive resultZipPath zipLog
+
+runDemoWebdriver = runSession defaultConfig $ do
+  openPage "https://www.haskell.org/"
+  saveScreenshot "./screenshot.png"
+  closeSession

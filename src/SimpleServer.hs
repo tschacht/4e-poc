@@ -28,3 +28,4 @@ runServer port config = do state <- constructState config
                              get "/movie/:title" movieR
                              get "/demo"         demoInfoR
                              get "/demo-zip"     demoZipR
+                             get "/demo-sc"      demoWebdriverR

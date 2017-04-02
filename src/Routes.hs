@@ -42,11 +42,20 @@ movieR = do t <- param "title" :: ActionT Text WebM Text
 -- | *** Demo stuff ***
 
 demoInfoR :: ActionT Text WebM ()
-demoInfoR = do rDate <- liftIO queryDemoDate
-               rFile <- liftIO queryDemoFile
-               (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
-               json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+demoInfoR = do
+  --rDate <- liftIO queryDemoDate
+  rFile <- liftIO queryDemoFile
+  --(rPingC, rPingO, rPingE) <- liftIO queryDemoPing
+  --json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+  let nope = "not supported on win"
+  json $ DemoResult nope rFile (DemoShellResult nope nope nope)
 
 demoZipR :: ActionT Text WebM ()
-demoZipR = do liftIO createDemoZip
-              file "./result.zip"
+demoZipR = do
+  liftIO createDemoZip
+  file "./result.zip"
+
+demoWebdriverR :: ActionT Text WebM ()
+demoWebdriverR = do
+  liftIO runDemoWebdriver
+  file "./screenshot.png"
