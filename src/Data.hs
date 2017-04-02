@@ -4,6 +4,7 @@ module Data
     ( ServerState (..), WebM (..)
     , constructState
     , querySearch, queryMovie, queryGraph
+    , queryDemoDate, queryDemoFile, queryDemoPing
     ) where
 
 import           Control.Monad.Trans        (liftIO)
@@ -13,13 +14,14 @@ import           Data.Maybe                 (fromJust)
 import           Data.Map.Strict            (fromList, (!))
 import           Data.Monoid                ((<>))
 import           Data.Pool                  (Pool, createPool)
-import           Data.Text                  (Text)
+import           Data.Text                  (Text, pack)
 import           Database.Bolt
+import           System.Process             (CreateProcess, shell, readCreateProcess, readCreateProcessWithExitCode)
 
 import           Type
 
 -- |A pool of connections to Neo4j server
-data ServerState = ServerState { pool :: Pool Pipe }
+newtype ServerState = ServerState { pool :: Pool Pipe }
 
 -- |Reader monad over IO to store connection pool
 type WebM = ReaderT ServerState IO
@@ -69,3 +71,17 @@ queryGraph limit = do records <- queryP cypher params
 constructState :: BoltCfg -> IO ServerState
 constructState bcfg = do pool <- createPool (connect bcfg) close 4 500 1
                          return (ServerState pool)
+
+-- | *** Demo stuff ***
+
+queryDemoDate :: IO Text
+queryDemoDate = do r <- readCreateProcess (shell "date") ""
+                   return $ pack r
+
+queryDemoPing :: IO (Text, Text, Text)
+queryDemoPing = do (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell "ping -c 5 localhost") ""
+                   return $ (pack $ show exitcode, pack stdout, pack stderr)
+
+queryDemoFile :: IO Text
+queryDemoFile = do r <- readFile "./demo.log"
+                   return $ pack r

@@ -29,6 +29,7 @@ library
                      , text
                      , aeson
                      , containers
+                     , process
   default-language:    Haskell2010
 
 executable hasbolt-sample-app-exe

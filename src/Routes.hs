@@ -38,3 +38,12 @@ movieR :: ActionT Text WebM ()
 movieR = do t <- param "title" :: ActionT Text WebM Text
             movieInfo <- runQ $ queryMovie (toStrict t)
             json movieInfo
+
+-- | *** Demo stuff ***
+
+-- |Date response route
+demoR :: ActionT Text WebM ()
+demoR = do rDate <- liftIO queryDemoDate
+           rFile <- liftIO queryDemoFile
+           (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
+           json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)

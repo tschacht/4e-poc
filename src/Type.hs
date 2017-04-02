@@ -41,6 +41,19 @@ data MGraph = MGraph { _nodes :: [MNode]
                      }
   deriving (Show, Eq)
 
+-- |Demo types
+data DemoShellResult = DemoShellResult { _exitcode :: Text
+                                       , _stdout :: Text
+                                       , _stderr :: Text
+                                       }
+  deriving (Show, Eq)
+
+data DemoResult = DemoResult { _date :: Text
+                             , _file :: Text
+                             , _ping :: DemoShellResult
+                             }
+  deriving (Show, Eq)
+
 instance ToJSON Value where
   toJSON (N _) = toJSON ()
   toJSON (B b) = toJSON b
@@ -69,6 +82,19 @@ instance ToJSON MRel where
 
 instance ToJSON MGraph where
   toJSON (MGraph n r) = object ["nodes" .= n, "links" .= r]
+
+-- |Demo JSON types
+instance ToJSON DemoShellResult where
+  toJSON (DemoShellResult c o e) = object [ "exitcode" .= c
+                                          , "stdout" .= o,
+                                            "stderr" .= e
+                                          ]
+
+instance ToJSON DemoResult where
+  toJSON (DemoResult d f p) = object [ "date" .= d
+                                     , "file" .= f,
+                                       "ping" .= p
+                                     ]
 
 -- |Converts some BOLT value to 'Cast'
 toCast :: Monad m => Value -> m Cast
