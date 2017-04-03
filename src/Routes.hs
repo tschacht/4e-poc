@@ -43,12 +43,14 @@ movieR = do t <- param "title" :: ActionT Text WebM Text
 
 demoInfoR :: ActionT Text WebM ()
 demoInfoR = do
-  --rDate <- liftIO queryDemoDate
+  rDate <- liftIO queryDemoDate
   rFile <- liftIO queryDemoFile
-  --(rPingC, rPingO, rPingE) <- liftIO queryDemoPing
-  --json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+  (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
+  json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+  {-- win
   let nope = "not supported on win"
   json $ DemoResult nope rFile (DemoShellResult nope nope nope)
+  -}
 
 demoZipR :: ActionT Text WebM ()
 demoZipR = do
