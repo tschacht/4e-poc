@@ -132,5 +132,5 @@ runDemoWebdriver = runSession defaultConfig . finallyClose $ do
 
 queryDemoRestApi :: IO Text
 queryDemoRestApi = do
-  r <- get "http://httpbin.org/get"
-  return $ DT.pack $ show (r ^. responseBody)
+  r <- get "http://localhost:8080/demo-cl"
+  return $ DT.pack $ "got:\n\n" ++ show (r ^. responseBody)

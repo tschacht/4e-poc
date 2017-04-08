@@ -62,7 +62,7 @@ demoWebdriverR = do
   liftIO runDemoWebdriver
   file "./screenshot.png"
 
-demoRestReq :: ActionT Text WebM ()
-demoRestReq = do
+demoRestReqR :: ActionT Text WebM ()
+demoRestReqR = do
   r <- liftIO queryDemoRestApi
   text $ fromStrict r
