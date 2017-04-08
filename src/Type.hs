@@ -3,8 +3,8 @@
 
 module Type where
 
-import           Data.Aeson (ToJSON (..), object, (.=))
-import           Data.Text    (Text)
+import Data.Aeson                           (ToJSON (..), object, (.=))
+import Data.Text                            (Text)
 
 import Database.Bolt (Record, Value (..), RecordValue (..), Node (..), at)
 

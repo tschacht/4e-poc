@@ -14,7 +14,6 @@ import Data.Map.Strict                      (fromList, (!))
 import Data.Monoid                          ((<>))
 import Data.Pool                            (Pool, createPool)
 import Data.Text as DT                      (Text, pack)
-import Data.Text.Lazy as DTL                (Text, pack)
 import Database.Bolt
 import Type
 
@@ -46,7 +45,7 @@ newtype ServerState = ServerState { pool :: Pool Pipe }
 type WebM = ReaderT ServerState IO
 
 -- |Search movie by title pattern
-querySearch :: DT.Text -> BoltActionT IO [Movie]
+querySearch :: Text -> BoltActionT IO [Movie]
 querySearch q = do records <- queryP cypher params
                    nodes <- traverse (`at` "movie") records
                    traverse toMovie nodes
@@ -54,7 +53,7 @@ querySearch q = do records <- queryP cypher params
         params = fromList [("title", T $ "(?i).*" <> q <> ".*")]
 
 -- |Returns movie by title
-queryMovie :: DT.Text -> BoltActionT IO MovieInfo
+queryMovie :: Text -> BoltActionT IO MovieInfo
 queryMovie title = do result <- head <$> queryP cypher params
                       T title <- result `at` "title"
                       L members <- result `at` "cast"
@@ -93,32 +92,22 @@ constructState bcfg = do pool <- createPool (connect bcfg) close 4 500 1
 
 -- | *** Demo stuff ***
 
-queryDemoDate :: IO DTL.Text
+queryDemoDate :: IO Text
 queryDemoDate = do
   r <- readCreateProcess (shell "date") ""
-  return $ DTL.pack r
+  return $ DT.pack r
 
-queryDemoPing :: IO (DTL.Text, DTL.Text, DTL.Text)
+queryDemoPing :: IO (Text, Text, Text)
 queryDemoPing = do
   (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell "ping -c 5 localhost") ""
-  return (DTL.pack $ show exitcode, DTL.pack stdout, DTL.pack stderr)
+  return (DT.pack $ show exitcode, DT.pack stdout, DT.pack stderr)
 
-queryDemoFile :: IO DTL.Text
+queryDemoFile :: IO Text
 queryDemoFile = do
   r <- readFile "./demo.log"
-  return $ DTL.pack r
+  return $ DT.pack r
 
 createDemoZip :: IO ()
-{--
-createDemoZip = do t <- round `fmap` getPOSIXTime
-                   writeFile "./result.zip" ""
-                   let ar = Archive [] Nothing (BS.pack "a comment")
-                   ar <- addFilesToArchive [OptVerbose, OptLocation "result.zip" True] ar ["./demo.log"]
-                   let entry = toEntry "asdf.txt" t (BS.pack "asdf")
-                   return $ addEntryToArchive entry ar
-                   writeEntry [OptVerbose, OptLocation "result.zip" True] entry
-                   return ()
---}
 createDemoZip = do
   resultZipPath <- resolveFile' "./result.zip"
   -- entry from string
@@ -141,7 +130,7 @@ runDemoWebdriver = runSession defaultConfig . finallyClose $ do
   saveScreenshot "./screenshot.png"
   closeSession
 
-queryDemoRestApi :: IO DTL.Text
+queryDemoRestApi :: IO Text
 queryDemoRestApi = do
   r <- get "http://httpbin.org/get"
-  return $ DTL.pack $ show (r ^. responseBody)
+  return $ DT.pack $ show (r ^. responseBody)
