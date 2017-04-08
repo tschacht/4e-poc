@@ -4,7 +4,7 @@ module Data
     ( ServerState (..), WebM (..)
     , constructState
     , querySearch, queryMovie, queryGraph
-    , queryDemoDate, queryDemoFile, queryDemoPing, createDemoZip, runDemoWebdriver
+    , queryDemoDate, queryDemoFile, queryDemoPing, createDemoZip, runDemoWebdriver, queryDemoRestApi
     ) where
 
 import Control.Monad.Trans.Reader           (ReaderT (..))
@@ -14,6 +14,7 @@ import Data.Map.Strict                      (fromList, (!))
 import Data.Monoid                          ((<>))
 import Data.Pool                            (Pool, createPool)
 import Data.Text as DT                      (Text, pack)
+import Data.Text.Lazy as DTL                (Text, pack)
 import Database.Bolt
 import Type
 
@@ -32,7 +33,10 @@ import Path.IO                              (resolveFile')
 import Data.Time.Clock.POSIX                (getPOSIXTime)
 import Data.ByteString.Lazy.Char8 as BL     (pack)
 import Data.ByteString.Char8 as B           (pack)
-import Test.WebDriver                       (runSession, runWD, defaultConfig, defaultCaps, openPage, closeSession, saveScreenshot)
+import Test.WebDriver                       --(runSession, finallyClose, defaultConfig)
+--import Test.WebDriver.Commands              (openPage, saveScreenshot, closeSession, saveScreenshot)
+import Control.Lens                         ((^.))
+import Network.Wreq                         (get, responseBody)
 
 
 -- |A pool of connections to Neo4j server
@@ -42,7 +46,7 @@ newtype ServerState = ServerState { pool :: Pool Pipe }
 type WebM = ReaderT ServerState IO
 
 -- |Search movie by title pattern
-querySearch :: Text -> BoltActionT IO [Movie]
+querySearch :: DT.Text -> BoltActionT IO [Movie]
 querySearch q = do records <- queryP cypher params
                    nodes <- traverse (`at` "movie") records
                    traverse toMovie nodes
@@ -50,7 +54,7 @@ querySearch q = do records <- queryP cypher params
         params = fromList [("title", T $ "(?i).*" <> q <> ".*")]
 
 -- |Returns movie by title
-queryMovie :: Text -> BoltActionT IO MovieInfo
+queryMovie :: DT.Text -> BoltActionT IO MovieInfo
 queryMovie title = do result <- head <$> queryP cypher params
                       T title <- result `at` "title"
                       L members <- result `at` "cast"
@@ -89,20 +93,20 @@ constructState bcfg = do pool <- createPool (connect bcfg) close 4 500 1
 
 -- | *** Demo stuff ***
 
-queryDemoDate :: IO Text
+queryDemoDate :: IO DTL.Text
 queryDemoDate = do
   r <- readCreateProcess (shell "date") ""
-  return $ DT.pack r
+  return $ DTL.pack r
 
-queryDemoPing :: IO (Text, Text, Text)
+queryDemoPing :: IO (DTL.Text, DTL.Text, DTL.Text)
 queryDemoPing = do
   (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell "ping -c 5 localhost") ""
-  return (DT.pack $ show exitcode, DT.pack stdout, DT.pack stderr)
+  return (DTL.pack $ show exitcode, DTL.pack stdout, DTL.pack stderr)
 
-queryDemoFile :: IO Text
+queryDemoFile :: IO DTL.Text
 queryDemoFile = do
   r <- readFile "./demo.log"
-  return $ DT.pack r
+  return $ DTL.pack r
 
 createDemoZip :: IO ()
 {--
@@ -129,7 +133,15 @@ createDemoZip = do
   -- add to result.zip
   withArchive resultZipPath zipLog
 
-runDemoWebdriver = runSession defaultConfig $ do
+runDemoWebdriver :: IO ()
+--runDemoWebdriver = runSession defaultConfig $ do
+runDemoWebdriver = runSession defaultConfig . finallyClose $ do
+--runDemoWebdriver = runSession defaultSession defaultCaps $ do
   openPage "https://www.haskell.org/"
   saveScreenshot "./screenshot.png"
   closeSession
+
+queryDemoRestApi :: IO DTL.Text
+queryDemoRestApi = do
+  r <- get "http://httpbin.org/get"
+  return $ DTL.pack $ show (r ^. responseBody)
