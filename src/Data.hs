@@ -19,14 +19,6 @@ import Type
 
 import System.Process                       (CreateProcess, shell, readCreateProcess, readCreateProcessWithExitCode)
 import Codec.Archive.Zip                    (CompressionMethod (Store), mkEntrySelector, createArchive, addEntry, withArchive)
-{--                                          (ZipOption (..),
-                                             Archive (Archive),
-                                             Entry,
-                                             toEntry,
-                                             addFilesToArchive,
-                                             addEntryToArchive,
-                                             writeEntry)
---}
 import Path                                 (Path, parseRelFile)
 import Path.IO                              (resolveFile')
 import Data.Time.Clock.POSIX                (getPOSIXTime)
