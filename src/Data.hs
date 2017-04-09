@@ -36,6 +36,8 @@ import Test.WebDriver                       --(runSession, finallyClose, default
 --import Test.WebDriver.Commands              (openPage, saveScreenshot, closeSession, saveScreenshot)
 import Control.Lens                         ((^.))
 import Network.Wreq                         (get, responseBody)
+import Text.Regex.TDFA                      ((=~))
+import System.Info                          (os)
 
 
 -- |A pool of connections to Neo4j server
@@ -94,13 +96,25 @@ constructState bcfg = do pool <- createPool (connect bcfg) close 4 500 1
 
 queryDemoDate :: IO Text
 queryDemoDate = do
-  r <- readCreateProcess (shell "date") ""
+  r <- readCreateProcess (shell dateCmd) ""
   return $ DT.pack r
+  where
+    dateCmd | onWindows os = "date /T"
+            | otherwise = "date"
 
 queryDemoPing :: IO (Text, Text, Text)
 queryDemoPing = do
-  (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell "ping -c 5 localhost") ""
+  (exitcode, stdout, stderr) <- readCreateProcessWithExitCode (shell pingCmd) ""
   return (DT.pack $ show exitcode, DT.pack stdout, DT.pack stderr)
+  where
+    pingCmd | onWindows os = "ping www.google.com"
+            | otherwise = "ping -c 3 www.google.com"
+
+onWindows :: String -> Bool
+onWindows s = s =~ win :: Bool
+  where
+    win :: String
+    win = "mingw32"
 
 queryDemoFile :: IO Text
 queryDemoFile = do
