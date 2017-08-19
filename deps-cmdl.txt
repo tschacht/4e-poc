@@ -1,1 +1,1 @@
-stack dot --external --depth 1 | dot -Tpng -o deps.png
+stack dot --external --depth 0 | dot -Tpng -o deps.png
