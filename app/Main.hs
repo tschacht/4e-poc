@@ -3,9 +3,10 @@
 module Main where
 
 import Data.List
+import Data.Maybe           (fromMaybe)
 import Control.Monad.Except (MonadIO, MonadError, catchError, liftIO)
 import Control.Applicative  ((<$>))
-import System.Environment   (getEnv)
+import System.Environment   (getEnv, lookupEnv)
 
 import Database.Bolt
 
@@ -18,7 +19,8 @@ defaultConfig = def {user = "neo4j", password = "neo4j"}
 -- |Run as PORT=8080 stack exec hasbolt-sample-app-exe
 main :: IO ()
 main = run `catchError` failMsg
-  where run = do port <- read <$> getEnv "PORT"
+  where run = do portMaybe <- lookupEnv "PORT"
+                 port <- return . read $ fromMaybe "8080" portMaybe
                  config <- readConfig `catchError` const (return defaultConfig)
                  runServer port config
         readConfig = do
