@@ -45,7 +45,7 @@ library
 executable hasbolt-sample-app-exe
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -fprof-auto -fprof-cafs
   build-depends:       base
                      , hasbolt
                      , hasbolt-sample-app
