@@ -5,31 +5,32 @@ module Data
     , constructState
     , querySearch, queryMovie, queryGraph
     , queryDemoDate, queryDemoFile, queryDemoPing, createDemoZip, runDemoWebdriver, queryDemoRestApi
+    , persistDemoNode
     ) where
 
-import Control.Monad.Trans.Reader           (ReaderT (..))
-import Data.List                            (nub)
-import Data.Maybe                           (fromJust)
-import Data.Map.Strict                      (fromList, (!))
-import Data.Monoid                          ((<>))
-import Data.Pool                            (Pool, createPool)
-import Data.Text as DT                      (Text, pack)
+import Control.Monad.Trans.Reader         (ReaderT (..))
+import Data.List                          (nub)
+import Data.Maybe                         (fromJust)
+import Data.Map.Strict                    (fromList, (!))
+import Data.Monoid                        ((<>))
+import Data.Pool                          (Pool, createPool)
+import Data.Text as DT                    (Text, pack)
 import Database.Bolt
 import Type
 
-import System.Process                       (CreateProcess, shell, readCreateProcess, readCreateProcessWithExitCode)
-import Codec.Archive.Zip                    (CompressionMethod (Store), mkEntrySelector, createArchive, addEntry, withArchive)
-import Path                                 (Path, parseRelFile)
-import Path.IO                              (resolveFile')
-import Data.Time.Clock.POSIX                (getPOSIXTime)
-import Data.ByteString.Lazy.Char8 as BL     (pack)
-import Data.ByteString.Char8 as B           (pack)
-import Test.WebDriver                       --(runSession, finallyClose, defaultConfig)
---import Test.WebDriver.Commands              (openPage, saveScreenshot, closeSession, saveScreenshot)
-import Control.Lens                         ((^.))
-import Network.Wreq                         (get, responseBody)
-import Text.Regex.TDFA                      ((=~))
-import System.Info                          (os)
+import System.Process                     (CreateProcess, shell, readCreateProcess, readCreateProcessWithExitCode)
+import Codec.Archive.Zip                  (CompressionMethod (Store), mkEntrySelector, createArchive, addEntry, withArchive)
+import Path                               (Path, parseRelFile)
+import Path.IO                            (resolveFile')
+import Data.Time.Clock.POSIX              (getPOSIXTime)
+import Data.ByteString.Lazy.Char8 as BL   (pack)
+import Data.ByteString.Char8 as B         (pack)
+import Test.WebDriver                     --(runSession, finallyClose, defaultConfig)
+--import Test.WebDriver.Commands           (openPage, saveScreenshot, closeSession, saveScreenshot)
+import Control.Lens                       ((^.))
+import Network.Wreq                       (get, responseBody)
+import Text.Regex.TDFA                    ((=~))
+import System.Info                        (os)
 
 
 -- |A pool of connections to Neo4j server
@@ -140,3 +141,11 @@ queryDemoRestApi :: IO Text
 queryDemoRestApi = do
   r <- get "http://localhost:8080/demo-cl"
   return $ DT.pack $ "got:\n\n" ++ show (r ^. responseBody)
+
+persistDemoNode :: Text -> BoltActionT IO [Record]
+persistDemoNode demoText = do
+  queryP cypher params
+  return []
+  where
+    cypher = "CREATE (demoNode:DemoNode {text:{lala}}) RETURN demoNode"
+    params = fromList [("lala", T demoText)]

@@ -3,10 +3,10 @@
 module Main where
 
 import Data.List
-import Data.Maybe           (fromMaybe)
-import Control.Monad.Except (MonadIO, MonadError, catchError, liftIO)
-import Control.Applicative  ((<$>))
-import System.Environment   (getEnv, lookupEnv)
+import Data.Maybe             (fromMaybe)
+import Control.Monad.Except   (MonadIO, MonadError, catchError, liftIO)
+import Control.Applicative    ((<$>))
+import System.Environment     (getEnv, lookupEnv)
 
 import Database.Bolt
 

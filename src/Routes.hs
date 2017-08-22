@@ -2,15 +2,16 @@
 
 module Routes where
 
-import  Control.Monad.Trans                 (lift, liftIO)
-import  Control.Monad.Trans.Reader          (ask)
-import  Data.Pool                           (withResource)
-import  Data.Text.Lazy                      (Text, toStrict, fromStrict)
-import  Database.Bolt
-import  Web.Scotty.Trans                    (ActionT, file, param, json, rescue, text)
+import Control.Monad.Trans          (lift, liftIO)
+import Control.Monad.Trans.Reader   (ask)
+import Data.Pool                    (withResource)
+import Data.Text.Lazy as DTL        (Text, toStrict, fromStrict)
+import Data.Text as DT              (append, pack)
+import Database.Bolt
+import Web.Scotty.Trans             (ActionT, file, param, json, rescue, text)
 
-import  Type
-import  Data
+import Type
+import Data
 
 -- |Run BOLT action in scotty 'ActionT' monad tansformer
 runQ :: BoltActionT IO a -> ActionT Text WebM a
@@ -46,6 +47,11 @@ demoInfoR = do
   rDate <- liftIO queryDemoDate
   rFile <- liftIO queryDemoFile
   (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
+
+  -- persist result
+  let text = rDate `append` DT.pack ": " `append` rPingO
+  runQ $ persistDemoNode $ text
+
   json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
 
 demoZipR :: ActionT Text WebM ()
