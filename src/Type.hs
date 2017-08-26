@@ -3,7 +3,7 @@
 
 module Type where
 
-import Data.Aeson   (ToJSON (..), object, (.=))
+import Data.Aeson   (ToJSON (..), FromJSON (..), object, (.=), withObject, (.:))
 import Data.Text    (Text)
 
 import Database.Bolt (Record, Value (..), RecordValue (..), Node (..), at)
@@ -95,6 +95,14 @@ instance ToJSON DemoResult where
                                      , "file" .= f,
                                        "ping" .= p
                                      ]
+
+instance FromJSON DemoResult where
+  parseJSON = withObject "DemoResult" $ \v -> DemoResult
+    <$> v .: "date" <*> v .: "file" <*> v .: "ping"
+
+instance FromJSON DemoShellResult where
+  parseJSON = withObject "DemoShellResult" $ \v -> DemoShellResult
+    <$> v .: "exitcode" <*> v .: "stdout" <*> v .: "stderr"
 
 -- |Converts some BOLT value to 'Cast'
 toCast :: Monad m => Value -> m Cast

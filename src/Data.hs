@@ -10,10 +10,11 @@ module Data
 
 import Control.Monad.Trans.Reader         (ReaderT (..))
 import Data.List                          (nub)
-import Data.Maybe                         (fromJust)
+import Data.Maybe                         (fromJust, fromMaybe)
 import Data.Map.Strict                    (fromList, (!))
 import Data.Monoid                        ((<>))
 import Data.Pool                          (Pool, createPool)
+import Data.Aeson                         (decode')
 import Data.Text as DT                    (Text, pack)
 import Database.Bolt
 import Type
@@ -137,10 +138,11 @@ runDemoWebdriver = runSession defaultConfig . finallyClose $ do
   saveScreenshot "./screenshot.png"
   closeSession
 
-queryDemoRestApi :: IO Text
+queryDemoRestApi :: IO DemoResult
 queryDemoRestApi = do
-  r <- get "http://localhost:8080/demo-cl"
-  return $ DT.pack $ "got:\n\n" ++ show (r ^. responseBody)
+  resp <- get "http://localhost:8080/demo-cl"
+  let r = decode' (resp ^. responseBody) :: Maybe DemoResult
+  return $ fromMaybe (DemoResult "" "" (DemoShellResult "" "" "")) r
 
 persistDemoNode :: Text -> BoltActionT IO [Record]
 persistDemoNode demoText = do

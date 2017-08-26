@@ -44,15 +44,10 @@ movieR = do t <- param "title" :: ActionT Text WebM Text
 
 demoInfoR :: ActionT Text WebM ()
 demoInfoR = do
-  rDate <- liftIO queryDemoDate
-  rFile <- liftIO queryDemoFile
-  (rPingC, rPingO, rPingE) <- liftIO queryDemoPing
-
-  -- persist result
-  let text = rDate `append` DT.pack ": " `append` rPingO
-  runQ $ persistDemoNode $ text
-
-  json $ DemoResult rDate rFile (DemoShellResult rPingC rPingO rPingE)
+  date <- liftIO queryDemoDate
+  fileData <- liftIO queryDemoFile
+  (pingExit, pingOut, pingErr) <- liftIO queryDemoPing
+  json $ DemoResult date fileData (DemoShellResult pingExit pingOut pingErr)
 
 demoZipR :: ActionT Text WebM ()
 demoZipR = do
@@ -67,4 +62,11 @@ demoWebdriverR = do
 demoRestReqR :: ActionT Text WebM ()
 demoRestReqR = do
   r <- liftIO queryDemoRestApi
-  text $ fromStrict r
+  -- persist result
+  runQ $ persistDemoNode $ nodeText r
+  --return again as json (i.e. equal to demoInfoR result)
+  json r
+  where
+    getdate (DemoResult date _ _) = date
+    getpingout (DemoResult _ _ (DemoShellResult _ pingOut _)) = pingOut
+    nodeText r = getdate r `append` DT.pack ": " `append` getpingout r
